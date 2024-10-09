@@ -1,0 +1,26 @@
+version: '3'
+
+tasks:
+  plan:
+    dir: ./infra
+    cmds:
+      - terraform init
+      - terraform plan
+
+  apply:
+    dir: ./infra
+    cmds:
+      - terraform init
+      - terraform apply -auto-approve
+      - task: output-to-dotenv
+
+  destroy:
+    dir: ./infra
+    cmds:
+      - terraform init
+      - terraform destroy -auto-approve
+
+  output-to-dotenv:
+    internal: true
+    cmds:
+      - ./scripts/tf-output-to-dotenv.sh

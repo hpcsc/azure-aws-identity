@@ -1,0 +1,36 @@
+version: '3'
+
+vars:
+  AZURE_CONFIG_DIR: ./tmp/azure
+
+dotenv:
+  - ./tmp/.env
+
+includes:
+  infra: Taskfile.infra.yml
+
+tasks:
+  login-sp:
+    internal: true
+    cmds:
+      - ./scripts/tf-output-to-dotenv.sh
+      - |
+        az login \
+          --service-principal \
+          --username ${AZURE_APPLICATION_CLIENT_ID} \
+          --tenant ${AZURE_TENANT_ID} \
+          --password ${AZURE_APPLICATION_PASSWORD} \
+          --allow-no-subscriptions
+    env:
+      AZURE_CONFIG_DIR: "{{.AZURE_CONFIG_DIR}}"
+
+  get-access-token:
+    desc: get Azure access token after logging into service principal
+    deps:
+      - login-sp
+    cmds:
+      - |
+        az account get-access-token \
+          --resource api://azure-aws-identity
+    env:
+      AZURE_CONFIG_DIR: "{{.AZURE_CONFIG_DIR}}"
