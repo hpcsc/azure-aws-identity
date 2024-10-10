@@ -14,6 +14,7 @@ cat <<EOF >> ${DOTENV_PATH}
 AZURE_APPLICATION_CLIENT_ID=$(echo "${TF_OUTPUT}" | jq -r '.azure_application_client_id.value')
 AZURE_APPLICATION_PASSWORD=$(echo "${TF_OUTPUT}" | jq -r '.azure_application_password.value')
 AZURE_TENANT_ID=$(echo "${TF_OUTPUT}" | jq -r '.azure_tenant_id.value')
+AWS_IAM_ROLE_ARN=$(echo "${TF_OUTPUT}" | jq -r '.aws_iam_role_arn.value')
 EOF
 
 echo "${DOTENV_PATH} created"

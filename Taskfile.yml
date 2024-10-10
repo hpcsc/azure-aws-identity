@@ -34,3 +34,35 @@ tasks:
           --resource api://azure-aws-identity
     env:
       AZURE_CONFIG_DIR: "{{.AZURE_CONFIG_DIR}}"
+
+  assume-aws-role:
+    desc: use Azure access token to assume a role in AWS
+    deps:
+      - login-sp
+    cmds:
+      - rm -rf ./tmp/aws && mkdir -p ./tmp/aws
+      - |
+        ACCESS_TOKEN=$(az account get-access-token \
+          --resource api://azure-aws-identity | jq -r '.accessToken')
+        aws sts assume-role-with-web-identity \
+          --role-arn ${AWS_IAM_ROLE_ARN} \
+          --web-identity-token ${ACCESS_TOKEN} \
+          --role-session-name azure-assume-role > ./tmp/aws/secrets.json
+    env:
+      AZURE_CONFIG_DIR: "{{.AZURE_CONFIG_DIR}}"
+
+  access-aws-resources:
+    desc: use assumed role AWS credentials to perform a few operations in AWS
+    deps:
+      - assume-aws-role
+    cmds:
+      - aws sts get-caller-identity # success
+      - aws s3 ls # success
+      - aws dynamodb list-tables --region ap-southeast-1  # fail
+    env:
+      AWS_ACCESS_KEY_ID:
+        sh: jq -r '.Credentials.AccessKeyId' ./tmp/aws/secrets.json
+      AWS_SECRET_ACCESS_KEY:
+        sh: jq -r '.Credentials.SecretAccessKey' ./tmp/aws/secrets.json
+      AWS_SESSION_TOKEN:
+        sh: jq -r '.Credentials.SessionToken' ./tmp/aws/secrets.json
